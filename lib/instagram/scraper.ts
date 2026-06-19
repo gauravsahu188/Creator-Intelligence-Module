@@ -243,11 +243,27 @@ export async function scrapeInstagramProfile(username: string): Promise<{ profil
   const proxyUrl = getScrapOpsProxyUrl();
   let lastError: Error | null = null;
 
+  const isProxyLimitError = (err: any) => {
+    const status = err.response?.statusCode || err.statusCode;
+    if (status === 429) return 'ScrapOps proxy rate limit reached (HTTP 429)';
+    if (status === 403) return 'ScrapOps proxy request forbidden or blocked (HTTP 403)';
+    if (status === 402) return 'ScrapOps proxy credit or usage limit reached (HTTP 402)';
+    const text = (err.message || '').toLowerCase();
+    if (text.includes('proxy') && (text.includes('limit') || text.includes('credit') || text.includes('exhausted'))) {
+      return 'ScrapOps proxy credit or usage limit reached';
+    }
+    return null;
+  };
+
   // Try Method 1 (web_profile_info)
   try {
     return await getProfileWithHandle(cleanUsername, proxyUrl);
   } catch (error: any) {
     console.warn(`[Scraper] Method 1 failed for "${cleanUsername}": ${error.message}`);
+    const limitError = isProxyLimitError(error);
+    if (limitError) {
+      throw new Error(limitError);
+    }
     lastError = error;
   }
 
@@ -259,6 +275,10 @@ export async function scrapeInstagramProfile(username: string): Promise<{ profil
     return await getProfileWithGraphQLFallback(cleanUsername, proxyUrl);
   } catch (error: any) {
     console.error(`[Scraper] Fallback Method 2 failed for "${cleanUsername}": ${error.message}`);
+    const limitError = isProxyLimitError(error);
+    if (limitError) {
+      throw new Error(limitError);
+    }
     lastError = error;
   }
 

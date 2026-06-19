@@ -113,7 +113,7 @@ async function runBackgroundJob(jobId: number, username: string, profileData: In
 
   } catch (error: any) {
     console.error(`[Background Job Error]:`, error.message);
-    await query(`UPDATE jobs SET status = 'Failed', updated_at = NOW() WHERE id = $1`, [jobId]);
+    await query(`UPDATE jobs SET status = 'Failed', error_message = $1, updated_at = NOW() WHERE id = $2`, [error.message, jobId]);
   }
 }
 
@@ -149,7 +149,15 @@ export async function POST(req: NextRequest) {
 
     // We do the initial profile scrape synchronously so we can return some immediate data.
     // However, comment fetching and ML processing is slow, so we background it.
-    const { profile: profileData, posts } = await scrapeInstagramProfile(cleanUsername);
+    let profileData, posts;
+    try {
+      const result = await scrapeInstagramProfile(cleanUsername);
+      profileData = result.profile;
+      posts = result.posts;
+    } catch (scrapeError: any) {
+      await query(`UPDATE jobs SET status = 'Failed', error_message = $1, updated_at = NOW() WHERE id = $2`, [scrapeError.message, jobId]);
+      throw scrapeError;
+    }
 
     // Run background tasks (fire and forget)
     // In a serverless env like Vercel, this might get killed, but for a local/VPS setup it works fine.

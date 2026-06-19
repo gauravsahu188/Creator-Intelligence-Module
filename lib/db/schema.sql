@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   apify_run_id     VARCHAR(255),
   total_chunks     INTEGER DEFAULT 0,
   processed_chunks INTEGER DEFAULT 0,
+  error_message    TEXT,
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
@@ -86,3 +87,6 @@ CREATE TRIGGER set_updated_at_jobs
   BEFORE UPDATE ON jobs
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- Migration check for existing installations
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS error_message TEXT;

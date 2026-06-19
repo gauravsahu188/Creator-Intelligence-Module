@@ -24,7 +24,16 @@ export async function fetchCommentsForPosts(postUrls: string[], maxCommentsPerPo
     if (!runResponse.ok) {
       const errText = await runResponse.text();
       console.error(`[Apify Scraper] Failed to run actor: ${runResponse.statusText} - ${errText}`);
-      return [];
+      
+      let errorMsg = `Apify Scraper Failed: ${runResponse.statusText}`;
+      if (runResponse.status === 429) {
+        errorMsg = 'Apify API Limit Reached (HTTP 429 Too Many Requests)';
+      } else if (runResponse.status === 402) {
+        errorMsg = 'Apify API Credits Limit Reached (HTTP 402 Payment Required)';
+      } else if (errText.toLowerCase().includes('limit') || errText.toLowerCase().includes('usage') || errText.toLowerCase().includes('credit')) {
+        errorMsg = 'Apify API Usage or Credit Limit Reached';
+      }
+      throw new Error(errorMsg);
     }
 
     const items = await runResponse.json();
@@ -38,6 +47,6 @@ export async function fetchCommentsForPosts(postUrls: string[], maxCommentsPerPo
 
   } catch (error: any) {
     console.error(`[Apify Scraper] Error calling Apify API:`, error.message);
-    return [];
+    throw error;
   }
 }

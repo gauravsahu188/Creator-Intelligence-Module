@@ -89,7 +89,7 @@ export default function Home() {
           setHasResults(true);
         } else if (data.status === 'Failed') {
           clearInterval(interval);
-          setError('Background job failed. Please try again.');
+          setError(data.errorMessage || 'Background job failed. Please try again.');
           setAppState('hero');
         }
       } catch (err: any) {

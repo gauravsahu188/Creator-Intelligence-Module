@@ -18,7 +18,7 @@ export async function GET(
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
-    const { username, status, total_chunks, processed_chunks } = jobResult;
+    const { username, status, total_chunks, processed_chunks, error_message } = jobResult;
 
     if (status !== 'Completed') {
       return NextResponse.json({
@@ -26,6 +26,7 @@ export async function GET(
         status,
         total_chunks,
         processed_chunks,
+        errorMessage: error_message || null,
       });
     }
 
