@@ -7,12 +7,23 @@ let pool: Pool | null = null;
 
 export function getPool(): Pool {
   if (!pool) {
+    const dbPassword = process.env.DB_PASSWORD !== undefined ? String(process.env.DB_PASSWORD) : '';
+    
+    console.log('[PostgreSQL Client] Initializing Pool with config:', {
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || '5432',
+      database: process.env.DB_NAME || 'instagram_scrapper_data',
+      user: process.env.DB_USER || 'postgres',
+      hasPassword: dbPassword.length > 0,
+      passwordLength: dbPassword.length
+    });
+
     pool = new Pool({
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '5432'),
       database: process.env.DB_NAME || 'instagram_scrapper_data',
       user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || '',
+      password: dbPassword,
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

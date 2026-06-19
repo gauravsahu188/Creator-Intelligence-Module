@@ -9,16 +9,31 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/genai": "^2.9.0",
+    "canvas-confetti": "^1.9.4",
+    "cheerio": "^1.2.0",
+    "got-scraping": "^4.2.1",
+    "lucide-react": "^1.20.0",
     "next": "16.2.9",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.21.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.1",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
+    "@types/node-fetch": "^2.6.13",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.5.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.1",
     "typescript": "^5"
   }
 }
