@@ -13,7 +13,7 @@
 [![Apify](https://img.shields.io/badge/Apify-Comment%20Scraper-00b300?style=flat-square&logo=apify)](https://apify.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
-[🚀 Live Demo](#) · [📂 GitHub Repo](https://github.com/gauravsahu188/Creator-Intelligence-Module) · [📬 Contact](#)
+[🚀 Live Demo](https://creator-intelligence-module-production.up.railway.app) · [📂 GitHub Repo](https://github.com/gauravsahu188/Creator-Intelligence-Module) · [📬 Contact](#)
 
 </div>
 
