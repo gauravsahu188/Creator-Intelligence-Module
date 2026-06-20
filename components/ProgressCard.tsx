@@ -8,8 +8,8 @@ interface ProgressCardProps {
 }
 
 const STEPS = [
-  { label: 'Fetching profile & posts via Apify', threshold: 15 },
-  { label: 'Extracting comments dataset', threshold: 30 },
+  { label: 'Scraping profile & posts via Custom Scraper', threshold: 15 },
+  { label: 'Extracting comments dataset via Apify', threshold: 30 },
   { label: 'Running Gemini 2.5 Flash analysis', threshold: 60 },
   { label: 'Persisting results to database', threshold: 95 },
 ];

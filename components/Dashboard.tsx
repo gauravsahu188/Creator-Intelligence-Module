@@ -66,7 +66,7 @@ function MetricCard({ icon: Icon, label, value, sub, accent = '#3b82f6' }: {
   icon: React.ElementType;
   label: string;
   value: string;
-  sub?: string;
+  sub?: React.ReactNode;
   accent?: string;
 }) {
   return (
@@ -146,13 +146,19 @@ export default function Dashboard({ data }: { data: any }) {
     );
   }
 
-  const { profile, posts = [], commentsAggregation = {} } = data;
+  let { profile, posts = [], commentsAggregation = {} } = data;
+
+  // Enhance posts to identify collab/sponsored posts based on caption
+  posts = posts.map((p: any) => {
+    const is_collab = p.is_collab || (p.caption && /(#ad\b|#sponsored\b|#partnership\b|#collab\b|\bpartner\b|\bsponsored by\b)/i.test(p.caption));
+    return { ...p, is_collab };
+  });
 
   // Derived metrics
   const totalLikes = posts.reduce((s: number, p: any) => s + (p.likes_count || 0), 0);
   const totalComments = posts.reduce((s: number, p: any) => s + (p.comments_count || 0), 0);
-  const avgShares = posts.reduce((s: number, p: any) => s + (p.shares_count || 0), 0);
-  const avgSaves = posts.reduce((s: number, p: any) => s + (p.saves_count || 0), 0);
+  const totalShares = posts.reduce((s: number, p: any) => s + (p.shares_count || 0), 0);
+  const totalSaves = posts.reduce((s: number, p: any) => s + (p.saves_count || 0), 0);
 
   // Demographics donut
   const demoData = [
@@ -225,6 +231,9 @@ export default function Dashboard({ data }: { data: any }) {
 
   // Collab post
   const collabPost = posts.find((p: any) => p.is_collab);
+  const collabER = collabPost && profile.followers && profile.followers > 0
+    ? (((collabPost.likes_count || 0) + (collabPost.comments_count || 0)) / profile.followers * 100).toFixed(2)
+    : '0.00';
 
   const downloadCSV = () => {
     // Generate CSV content
@@ -415,6 +424,9 @@ export default function Dashboard({ data }: { data: any }) {
             <span style={{ fontSize: 12, color: '#8a94a6', display: 'flex', alignItems: 'center', gap: 4 }}>
               <MessageCircle size={12} /> {fmt(collabPost.comments_count)}
             </span>
+            <span style={{ fontSize: 12, color: PALETTE.blue, display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700 }}>
+              <Activity size={12} /> ER: {collabER}%
+            </span>
             <a
               href={`https://instagram.com/p/${collabPost.shortcode}`}
               target="_blank"
@@ -436,9 +448,15 @@ export default function Dashboard({ data }: { data: any }) {
       }}>
         <MetricCard icon={Heart}         label="Avg. Likes"      value={fmt(Math.round(totalLikes / Math.max(posts.length, 1)))}     sub="per post"             accent={PALETTE.rose}   />
         <MetricCard icon={MessageCircle} label="Avg. Comments"   value={fmt(Math.round(totalComments / Math.max(posts.length, 1)))}  sub="per post"             accent={PALETTE.blue}   />
-        <MetricCard icon={Share2}        label="Avg. Shares"     value={fmt(Math.round(avgShares / Math.max(posts.length, 1)))}      sub="per post"             accent={PALETTE.purple} />
-        <MetricCard icon={Bookmark}      label="Avg. Saves"      value={fmt(Math.round(avgSaves / Math.max(posts.length, 1)))}       sub="per post"             accent={PALETTE.teal}   />
-        <MetricCard icon={Activity}      label="Engagement Rate" value={fmtRate(profile.engagementRate)}                              sub="likes + comments / followers" accent={PALETTE.blue}   />
+        <MetricCard icon={Share2}        label="Avg. Shares"     value={fmt(Math.round(totalShares / Math.max(posts.length, 1)))}      sub="per post"             accent={PALETTE.purple} />
+        <MetricCard icon={Bookmark}      label="Avg. Saves"      value={fmt(Math.round(totalSaves / Math.max(posts.length, 1)))}       sub="per post"             accent={PALETTE.teal}   />
+        <MetricCard icon={Activity}      label="Engagement Rate" value={fmtRate(profile.engagementRate)}                              sub={
+          <span title="Formula: (Likes + Comments) ÷ Followers. Justification: We exclude shares/saves because they are often hidden from public APIs, making (Likes+Comments) the most reliable benchmark.">
+            (Likes + Comments) ÷ Followers
+            <br />
+            <span style={{ fontSize: 10, opacity: 0.8 }}>Standard public-data metric</span>
+          </span>
+        } accent={PALETTE.blue}   />
       </div>
 
       {/* ── Charts Row 1: Demographics + Comment Safety + Relevance ── */}
@@ -797,9 +815,9 @@ export default function Dashboard({ data }: { data: any }) {
 
                   {/* Collab badge overlay */}
                   {post.is_collab && (
-                    <span className="collab-badge" style={{ position: 'absolute', top: 8, left: 8 }}>
+                    <span className="collab-badge" style={{ position: 'absolute', top: 8, right: post.shortcode ? 44 : 8 }}>
                       <Activity size={8} />
-                      COLLAB
+                      SPONSORED
                     </span>
                   )}
 

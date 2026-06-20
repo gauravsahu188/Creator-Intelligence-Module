@@ -54,7 +54,7 @@ export default function Home() {
       setJobId(result.jobId);
       setAppState('progress');
       setProgress(15);
-      setStatusText('Fetching profile & posts via Apify…');
+      setStatusText('Scraping profile & posts via Custom Scraper…');
     } catch (err: any) {
       setError(err.message);
       setAppState('hero');
@@ -72,14 +72,19 @@ export default function Home() {
 
         if (!res.ok) throw new Error(data.error || 'Polling failed');
 
-        setStatusText(`Status: ${data.status}`);
+        if (data.status === 'Scraping') {
+          setStatusText('Extracting comments dataset via Apify…');
+          setProgress(30);
+        } else if (data.status === 'Processing_ML') {
+          setStatusText('Running Gemini 2.5 Flash analysis…');
+          setProgress(60);
+        } else {
+          setStatusText(`Status: ${data.status}`);
+        }
 
         if (data.total_chunks && data.total_chunks > 0) {
           const pct = Math.min(99, Math.round((data.processed_chunks / data.total_chunks) * 100));
           setProgress(pct);
-        } else if (data.status === 'Processing_ML') {
-          setProgress(25);
-          setStatusText('Running Gemini 2.5 Flash analysis…');
         }
 
         if (data.status === 'Completed') {

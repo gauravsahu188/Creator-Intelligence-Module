@@ -7,27 +7,41 @@ let pool: Pool | null = null;
 
 export function getPool(): Pool {
   if (!pool) {
-    const dbPassword = process.env.DB_PASSWORD !== undefined ? String(process.env.DB_PASSWORD) : '';
-    
-    console.log('[PostgreSQL Client] Initializing Pool with config:', {
-      host: process.env.DB_HOST || 'localhost',
-      port: process.env.DB_PORT || '5432',
-      database: process.env.DB_NAME || 'instagram_scrapper_data',
-      user: process.env.DB_USER || 'postgres',
-      hasPassword: dbPassword.length > 0,
-      passwordLength: dbPassword.length
-    });
+    const connectionString = process.env.DATABASE_URL;
 
-    pool = new Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'instagram_scrapper_data',
-      user: process.env.DB_USER || 'postgres',
-      password: dbPassword,
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-    });
+    if (connectionString) {
+      console.log('[PostgreSQL Client] Initializing Pool with DATABASE_URL connection string.');
+      const isLocal = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+      pool = new Pool({
+        connectionString,
+        ssl: isLocal ? false : { rejectUnauthorized: false },
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      });
+    } else {
+      const dbPassword = process.env.DB_PASSWORD !== undefined ? String(process.env.DB_PASSWORD) : '';
+      
+      console.log('[PostgreSQL Client] Initializing Pool with config:', {
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || '5432',
+        database: process.env.DB_NAME || 'instagram_scrapper_data',
+        user: process.env.DB_USER || 'postgres',
+        hasPassword: dbPassword.length > 0,
+        passwordLength: dbPassword.length
+      });
+
+      pool = new Pool({
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432'),
+        database: process.env.DB_NAME || 'instagram_scrapper_data',
+        user: process.env.DB_USER || 'postgres',
+        password: dbPassword,
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      });
+    }
 
     pool.on('error', (err) => {
       console.error('Unexpected PostgreSQL pool error:', err);

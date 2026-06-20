@@ -4,7 +4,7 @@
 
 ![Creator Intelligence Module Banner](https://img.shields.io/badge/Creator%20Intelligence-Module-6c63ff?style=for-the-badge&logo=instagram&logoColor=white)
 
-**A full-stack Instagram creator analytics platform powered by AI — built for internship assignment submission.**
+**A full-stack Instagram creator analytics platform powered by AI — **
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
@@ -207,7 +207,36 @@ creator-intelligence-module/
                         │   Returns status    │
                         │   + full payload    │
                         └─────────────────────┘
+
+---
+
+## 💸 Cost Optimization & Logic
+
+This module was designed as a test platform and heavily optimized to remain within free tiers and minimize external API costs.
+
+### Why Apify Only for Comments?
+We utilize **Apify** exclusively for scraping Instagram comments, while the primary profile and post data is scraped using a custom residential proxy setup. Apify provides a highly robust Instagram comment scraper that handles pagination and anti-bot measures flawlessly. To **minimize costs**, we bundle all comment scraping into a **single API call** rather than launching multiple runs per post. We pass the URLs for all 12 posts in one run, significantly reducing compute usage and Apify platform fees per analysis.
+
+### Comment Scraping Limits
+As this is an exploratory test platform, we introduced a strict limit of **30 comments per post**. This acts as a safeguard against runaway costs and ensures that our Apify free credit consumption remains predictable.
+> **Disclaimer:** If you decide to increase the limit above 30 comments per post in the codebase, please be aware that **your Apify usage and costs will increase proportionally**, as the Apify Actor charges based on compute time and the volume of data extracted.
+
+### AI Processing: Gemini vs Hugging Face
+We chose **Google Gemini 2.5 Flash** for comment classification instead of running open-source models (e.g., from Hugging Face) because:
+- **Cost & Speed:** The Gemini 2.5 Flash model offers a generous free tier with incredibly fast inference times, making it ideal for bulk text processing.
+- **No Infrastructure Overhead:** It provides excellent zero-shot classification and complex sentiment analysis without the need to provision, manage, or pay for expensive GPU instances that would be required to run equivalent Hugging Face models at scale.
+
+### Chunking for Rate Limits
+To crack the Gemini API free-tier rate limits and handle large context windows efficiently, we implemented a **chunking strategy**. Scraped comments are batched into chunks of 100 before being sent to the Gemini model. This ensures we don't hit token payload size restrictions or exceed the requests-per-minute (RPM) quota, maintaining a stable, free, and non-blocking background processing pipeline.
 ```
+
+---
+
+## ☁️ Deployment
+
+For production deployments, the application is pre-configured to run on **Railway** connected to a **Supabase** PostgreSQL database.
+
+See the detailed, step-by-step [Deployment Guide](file:///Users/gauravsahu/Downloads/Gumroad%20-%20The%20Ultimate%20Web%20Scraping%20Course%20-%20Adrian%20Horning/WebScraping%20Code/Creator%20Intelligence%20Module/DEPLOYMENT.md) for full setup instructions.
 
 ---
 
@@ -323,7 +352,7 @@ The module classifies creators and their audiences into one of 10 niche interest
 
 **Gaurav Sahu**
 - GitHub: [@gauravsahu188](https://github.com/gauravsahu188)
-- LinkedIn: [Add your LinkedIn URL]
+- LinkedIn: [linkedin.com/in/gaurav-sahu-932817195]
 
 ---
 
