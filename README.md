@@ -1,121 +1,146 @@
-# Creator Intelligence Module — Advanced Instagram Scraper & Audience Insights
+# 🧠 Creator Intelligence Module
 
-A full-stack Next.js web application equipped with robust residential proxy integration, PostgreSQL storage, Apify comment scraping, and Google Gemini-powered audience sentiment and demographic analysis. 
+<div align="center">
 
-This module utilizes an asynchronous, job-based architecture to ingest Instagram creator data, classify comments at scale, and render detailed visualization dashboards.
+![Creator Intelligence Module Banner](https://img.shields.io/badge/Creator%20Intelligence-Module-6c63ff?style=for-the-badge&logo=instagram&logoColor=white)
+
+**A full-stack Instagram creator analytics platform powered by AI — built for internship assignment submission.**
+
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![Gemini AI](https://img.shields.io/badge/Gemini-2.5%20Flash-4285f4?style=flat-square&logo=google)](https://ai.google.dev/)
+[![Apify](https://img.shields.io/badge/Apify-Comment%20Scraper-00b300?style=flat-square&logo=apify)](https://apify.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+
+[🚀 Live Demo](#) · [📂 GitHub Repo](https://github.com/gauravsahu188/Creator-Intelligence-Module) · [📬 Contact](#)
+
+</div>
 
 ---
 
-## 🏗 System Workflow & Architecture
+## 📖 Project Description
 
-The Creator Intelligence Module uses a split **Synchronous/Asynchronous request workflow** to provide a fast user experience while performing heavy network scraping and LLM processing in the background.
+The **Creator Intelligence Module** is a full-stack web application that takes an Instagram creator's handle, scrapes their public profile and last 12 posts, classifies every comment using Google Gemini AI, estimates aggregate audience demographics, and presents everything in a beautiful interactive analytics dashboard.
 
-```mermaid
-sequenceDiagram
-    participant Client as Frontend Client
-    participant API as Next.js API (/api/analyze)
-    participant Scraper as Scraper Engine
-    participant Proxy as ScrapOps Proxy Pool
-    participant IG as Instagram API
-    participant JobsAPI as Next.js API (/api/jobs/[id])
-    participant Apify as Apify (Comment Scraper)
-    participant Gemini as Gemini AI (2.5-flash)
-    participant DB as PostgreSQL Database
+This project was built as part of an internship assignment to demonstrate real-world data engineering, AI/ML integration, and full-stack web development skills.
 
-    Client->>API: POST { username }
-    API->>DB: Create Job (status: 'Scraping')
-    DB-->>API: Return Job ID
-    
-    rect rgb(20, 15, 35)
-        note right of API: Step 1: Synchronous Profile Metadata Ingestion
-        API->>Scraper: scrapeInstagramProfile(username)
-        Scraper->>Proxy: gotScraping(url)
-        Proxy->>IG: Fetch profile metadata JSON (15KB)
-        IG-->>Proxy: Return JSON
-        Proxy-->>Scraper: Return Decoded Profile & 12 Recent Posts
-        Scraper-->>API: Return Profile & Posts
-    end
+**Problem it solves:** Brands and marketers need to quickly assess whether an Instagram creator's audience is genuine, what they talk about, and who they are — this module automates that entire intelligence pipeline end-to-end.
 
-    API-->>Client: HTTP 200 { success: true, jobId, data: profile }
-    note left of Client: UI displays progress card and polls /api/jobs/[jobId]
+---
 
-    rect rgb(30, 25, 45)
-        note right of API: Step 2: Asynchronous Background Job Processing
-        API->>DB: Persist Profile & 12 Posts (ON CONFLICT UPDATE)
-        
-        API->>Apify: Fetch Comments for 12 Posts
-        Apify->>IG: Scraping Instagram Comments (APIs & GraphQL)
-        IG-->>Apify: raw comments list
-        Apify-->>API: Return comments (up to 30 per post)
-        API->>DB: Insert Comments into DB
-        
-        API->>DB: Update Job (status: 'Processing_ML', total_chunks)
-        
-        loop For Each Chunk of 100 Comments
-            API->>Gemini: Batch Classify Comments (sentiment, category, bot-likelihood)
-            Gemini-->>API: Array of classified results
-            API->>DB: Update Comment Records & Job Progress (processed_chunks)
-        end
-        
-        API->>DB: Update Job (status: 'Completed')
-    end
+## ✨ Features
 
-    loop Every 3 Seconds (Polling)
-        Client->>JobsAPI: GET /api/jobs/[jobId]
-        JobsAPI->>DB: Check Job Status & Progress
-        DB-->>JobsAPI: Status & progress percentages
-        JobsAPI-->>Client: Return Status (Scraping -> Processing_ML -> Completed)
-    end
-    
-    Client->>JobsAPI: GET /api/jobs/[jobId] (Completed)
-    JobsAPI->>DB: Retrieve Profile, Posts & Aggregated Comments Stats
-    DB-->>JobsAPI: Returns Full Data Payload
-    JobsAPI-->>Client: HTTP 200 { status: 'Completed', data }
-    note left of Client: UI renders Dashboard with interactive Recharts
+### 🔍 Creator Data Collection
+- Scrapes Instagram public profile: handle, display name, HD avatar, bio, external link, verified status, follower/following/post counts
+- Extracts last **12 posts** (both collab/sponsored and personal): likes, comments, media type, thumbnail, caption, timestamp
+- Computes **engagement metrics**: avg. likes, avg. comments, engagement rate, and identifies the top-performing post
+
+### 🤖 AI Comment Classification (via Gemini 2.5 Flash)
+Every comment across all 12 posts is classified across 6 buckets:
+
+| Bucket | Values |
+|--------|--------|
+| **Authenticity** | Genuine / Spam (emoji-only, repeated text, link-drops, bot handles) |
+| **Bot-likelihood** | Human / Likely-bot / Uncertain |
+| **Political Inclination** | Positive / Neutral / Negative (with party identification) |
+| **Relevance** | On-topic / Off-topic / Generic |
+| **Type** | Praise / Question / Criticism / Tag-a-friend / Sales-or-promo / Other |
+| **Language/Script** | English / Hindi / Hinglish / Regional — Hinglish flagged for manual review |
+
+### 👥 Aggregate Audience Demographics
+- **Gender split**: Female % / Male % / Undisclosed % (all three reported)
+- **Interest cohort classification** across 10 niche categories
+- **Political inclination distribution** with High / Medium / Low confidence levels
+
+### 📊 Interactive Analytics Dashboard
+- Real-time job progress tracking with live status polling
+- Glassmorphic dark-mode UI with smooth animations
+- Engagement trend chart — Likes vs. Comments across all 12 posts
+- Sentiment, comment type, bot-likelihood, and language distribution charts
+- Paginated results table with search, sort, filter, and CSV/JSON export
+
+### 🏗 Async Job Architecture
+- Non-blocking background processing — UI never times out
+- Chunked Gemini API calls (100 comments/chunk) to respect rate limits
+- Real-time progress reporting: `Scraping → Processing_ML → Completed`
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Next.js 16.2.9 (App Router, TypeScript) |
+| **Frontend** | React 19, Tailwind CSS v4, Recharts, Lucide Icons |
+| **Backend** | Next.js API Routes (serverless + background workers) |
+| **Database** | PostgreSQL 14+ (via `pg` driver, auto-schema init) |
+| **AI / ML** | Google Gemini 2.5 Flash (`@google/genai`) |
+| **Data Collection** | ScrapOps Residential Proxy + Apify Instagram Comment Scraper |
+| **HTTP Client** | `got-scraping` (residential proxy-aware), `node-fetch` |
+| **HTML Parsing** | Cheerio |
+
+---
+
+## 🗂 Project Structure
+
+```
+creator-intelligence-module/
+├── app/
+│   ├── api/
+│   │   ├── analyze/          # POST — start scrape + analysis job
+│   │   ├── jobs/[jobId]/     # GET  — poll job status & fetch results
+│   │   ├── results/          # GET  — paginated profile listing
+│   │   ├── stats/            # GET  — aggregated dashboard stats
+│   │   ├── download/         # GET  — CSV / JSON export
+│   │   └── proxy-image/      # GET  — image proxy (avoids hotlink blocks)
+│   ├── results/              # Results listing page
+│   ├── page.tsx              # Main search page
+│   └── layout.tsx
+├── components/
+│   ├── Dashboard.tsx         # Main analytics dashboard (charts + tables)
+│   ├── HeroSearch.tsx        # Landing search input
+│   ├── ProfileHeader.tsx     # Creator profile card
+│   ├── ProgressCard.tsx      # Real-time job progress tracker
+│   ├── RecentPostsGrid.tsx   # Post thumbnail grid
+│   ├── ResultsTable.tsx      # Paginated + sortable results table
+│   ├── StatsCard.tsx         # Metric summary cards
+│   ├── DemographicsCard.tsx  # Audience demographics display
+│   └── HealthGauge.tsx       # Authenticity health gauge
+├── lib/
+│   ├── ai/
+│   │   ├── gemini.ts         # Gemini batch comment classification
+│   │   └── heuristics.ts     # Bio-based demographic inference
+│   ├── db/
+│   │   └── schema.sql        # PostgreSQL schema definition
+│   ├── instagram/
+│   │   ├── scraper.ts        # ScrapOps proxy Instagram scraper
+│   │   └── apify.ts          # Apify comment scraper integration
+│   └── AppContext.tsx        # Global React context
+└── types/                    # Shared TypeScript type definitions
 ```
 
 ---
 
-## 🌟 Key Features
-
-1. **Dual-Method Profile Scraper**: Extracts raw user metadata (username, followers, following, posts, bio, HD avatar, verified status) and recent posts via ScrapOps residential proxies to bypass Instagram's rate limits.
-2. **Asynchronous Background Processing**: Fires off Apify comment scraping and Gemini ML evaluation asynchronously so the browser never times out or hangs.
-3. **Bio Heuristics Demographics**: Parses profile biographies and landing page URLs through heuristic patterns to infer interest cohorts and gender/audience splits.
-4. **Google Gemini LLM Classification**: Classifies audience comments in chunked batches (handling rate limit throttling automatically) to extract:
-   - **Authenticity & Bot Likelihood**: Detects genuine vs. spam interactions and likely bots.
-   - **Political Stance & Targets**: Identifies target party mentions (e.g., BJP, Congress) and positive/negative/neutral political inclinations.
-   - **South Asian Context**: Optimised for Hindi, English, Hinglish, and regional dialects.
-   - **Interaction Type**: Categorizes feedback into praise, inquiries, criticism, friend tags, or promotional spam.
-5. **Interactive Insights Dashboard**: Features beautiful glassmorphic dark mode charts powered by **Recharts**:
-   - **Engagement Rates**: Tracks real-time engagement calculated across recent posts.
-   - **Engagement Trend**: Overlays Likes vs. Comments sequences across all 12 recent posts.
-   - **Audience & Sentiment Distributions**: Displays sentiment splits, comment type breakdowns, and language mixes.
-   - **Interactive Table & Exports**: Sorts, filters, and exports data to CSV or JSON formats.
-
----
-
-## 📊 Database Schema (`instagram_scrapper_data`)
-
-The database is built on PostgreSQL and initialized dynamically on server launch.
+## 🗄 Database Schema
 
 ```
-                  +-------------------+
-                  |       jobs        |
-                  +-------------------+
-                  | id (PK)           |
-                  | username          |
-                  | status            |
-                  | apify_run_id      |
-                  | total_chunks      |
-                  | processed_chunks  |
-                  | created_at        |
-                  | updated_at        |
-                  +-------------------+
-                            |
-                            | (stores job progress)
-                            v
++-------------------+
+|       jobs        |   Tracks job lifecycle & chunk progress
++-------------------+
+| id (PK, UUID)     |
+| username          |
+| status            |   Scraping | Processing_ML | Completed | Failed
+| apify_run_id      |
+| total_chunks      |
+| processed_chunks  |
+| created_at        |
+| updated_at        |
++-------------------+
+          |
+          ▼
 +-------------------+     +-------------------+     +-------------------+
-|     profiles      |---->|       posts       |---->|     comments      |
+|     profiles      |────▶|       posts       |────▶|     comments      |
 +-------------------+     +-------------------+     +-------------------+
 | id (PK)           |     | id (PK)           |     | id (PK)           |
 | username (Unique) |     | profile_id (FK)   |     | post_id (FK)      |
@@ -133,84 +158,185 @@ The database is built on PostgreSQL and initialized dynamically on server launch
 | undisclosed_pct   |
 | interest_cohort   |
 | scraped_at        |
-| updated_at        |
 +-------------------+
 ```
 
-### Tables Overview
-- **`jobs`**: Tracks scraping and ML job progress (`Scraping`, `Processing_ML`, `Completed`, `Failed`). Includes chunks count for progress calculations.
-- **`profiles`**: Stores Instagram profile metadata, bio heuristics, and audience gender split estimations.
-- **`posts`**: Stores post metrics (likes, comments, thumbnails) for engagement trend lines.
-- **`comments`**: Holds individual audience comments along with Gemini-derived categorization columns.
+---
+
+## 🔌 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/analyze` | Start a new analysis job for an Instagram handle |
+| `GET` | `/api/jobs/[jobId]` | Poll job status or retrieve completed results |
+| `GET` | `/api/results` | Paginated list of all analyzed profiles |
+| `GET` | `/api/stats` | Aggregated platform-wide summary metrics |
+| `GET` | `/api/download` | Export profiles as `csv` or `json` |
+| `GET` | `/api/proxy-image` | Proxy Instagram CDN images to avoid hotlink blocks |
 
 ---
 
-## 🔌 API Endpoints Specifications
+## ⚙️ System Architecture
 
-### 1. Start Analysis
-- **Endpoint**: `POST /api/analyze`
-- **Payload**: `{ "username": "creator_handle" }`
-- **Flow**: Starts a new job in the database, runs the synchronous profile scraper, launches the background worker (Apify + Gemini), and immediately returns the profile metadata along with the `jobId`.
-
-### 2. Poll/Retrieve Job Results
-- **Endpoint**: `GET /api/jobs/[jobId]`
-- **Response (Processing)**: Returns status (`Scraping` / `Processing_ML`) and current chunk progress values.
-- **Response (Completed)**: Returns job status and full visualization-ready payload including the profile details, post history, and aggregated comment insights (authenticity, bot stats, languages, types, and political sentiment mapping).
-
-### 3. Retrieve Scraped Profiles
-- **Endpoint**: `GET /api/results`
-- **Query Params**: `page`, `limit`, `search`, `sortBy`, `sortOrder`
-- **Response**: Paginated profile list from the database.
-
-### 4. Overview Metrics
-- **Endpoint**: `GET /api/stats`
-- **Response**: Aggregated summary statistics for the database dashboard (total records, average followers, privacy splits).
-
-### 5. Media Proxy Handler
-- **Endpoint**: `GET /api/proxy-image?url=...`
-- **Flow**: Fetches and pipes Instagram avatar images securely to prevent direct Instagram Hotlinking blocks in the frontend.
-
-### 6. Export Data
-- **Endpoint**: `GET /api/download?format=[csv|json]&search=...`
-- **Response**: Triggers an attachment download containing either the raw CSV or JSON records matching the search query.
+```
+                        ┌─────────────────────┐
+                        │   Frontend (Next.js) │
+                        │  Search → Poll → UI  │
+                        └──────────┬──────────┘
+                                   │ POST /api/analyze
+                                   ▼
+                        ┌─────────────────────┐
+                        │  POST /api/analyze  │
+                        │  1. Create DB job   │
+                        │  2. Scrape profile  │──▶ ScrapOps Proxy ──▶ Instagram
+                        │  3. Return jobId    │
+                        └──────────┬──────────┘
+                                   │ (background, non-blocking)
+                     ┌─────────────▼─────────────┐
+                     │      Background Worker      │
+                     │  1. Persist profile + posts │
+                     │  2. Apify → fetch comments  │──▶ Apify ──▶ Instagram
+                     │  3. Chunk comments (100)    │
+                     │  4. Gemini classify each    │──▶ Gemini 2.5 Flash
+                     │  5. Save results to DB      │
+                     │  6. Update job: Completed   │
+                     └─────────────────────────────┘
+                                   │
+                        ┌──────────▼──────────┐
+                        │   GET /api/jobs/id  │◀── Frontend polls every 3s
+                        │   Returns status    │
+                        │   + full payload    │
+                        └─────────────────────┘
+```
 
 ---
 
-## 🛠 Setup & Local Running
+## 🚀 Local Setup & Installation
 
 ### Prerequisites
-- **Node.js**: v18 or newer
-- **PostgreSQL**: v14 or newer
 
-### 1. Setup Environment Configuration
-Create a `.env.local` file in the root directory and configure the variables:
+- **Node.js** v18 or newer
+- **PostgreSQL** v14 or newer (running locally)
+- API keys for: ScrapOps, Apify, Google Gemini
+
+### Step 1 — Clone the Repository
+
+```bash
+git clone https://github.com/gauravsahu188/Creator-Intelligence-Module.git
+cd Creator-Intelligence-Module
+```
+
+### Step 2 — Install Dependencies
+
+```bash
+npm install
+```
+
+### Step 3 — Configure Environment Variables
+
+Create a `.env.local` file in the project root:
 
 ```env
-# ScrapOps.io API Key
-SCRAPEOPS_API_KEY=your-scrapeops-api-key
+# ScrapOps Residential Proxy (for Instagram scraping)
+SCRAPEOPS_API_KEY=your_scrapeops_api_key_here
 
-# PostgreSQL Connection Credentials
+# PostgreSQL Database
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=instagram_scrapper_data
 DB_USER=postgres
-DB_PASSWORD=your-postgres-password
+DB_PASSWORD=your_postgres_password_here
 
-# Third-Party Integrations
-APIFY_API_TOKEN=your-apify-api-token
-GEMINI_API_KEY=your-google-gemini-api-key
+# Apify (Instagram comment scraper)
+APIFY_API_TOKEN=your_apify_token_here
+
+# Google Gemini AI
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-### 2. Run the Development Server
-Install dependencies and run the Next.js Turbopack dev server:
+> **Note:** A `.env.example` file is provided with placeholder values for reference.
+
+### Step 4 — Set Up PostgreSQL Database
+
+Create the database in PostgreSQL:
+
+```sql
+CREATE DATABASE instagram_scrapper_data;
+```
+
+> The application will **automatically initialize all tables** on first launch using the embedded schema.
+
+### Step 5 — Run the Development Server
 
 ```bash
-# Install dependencies
-npm install
-
-# Start Next.js development server
 npm run dev
 ```
 
-The application will launch on **[http://localhost:3000](http://localhost:3000)**. 
-Upon loading, the application will automatically initialize the database schema in PostgreSQL using the SQL statements specified in [schema.sql](file:///Users/gauravsahu/Downloads/Gumroad%20-%20The%20Ultimate%20Web%20Scraping%20Course%20-%20Adrian%20Horning/WebScraping%20Code/Creator%20Intelligence%20Module/lib/db/schema.sql).
+Open [http://localhost:3000](http://localhost:3000) in your browser. The app is ready! 🎉
+
+---
+
+## 📸 Screenshots
+
+> *(Add your screenshots here after deploying or running locally)*
+
+| Feature | Preview |
+|---------|---------|
+| 🔍 Search Page | *(screenshot)* |
+| ⏳ Progress Tracker | *(screenshot)* |
+| 📊 Analytics Dashboard | *(screenshot)* |
+| 📋 Results Table | *(screenshot)* |
+
+---
+
+## 🔑 API Keys — Where to Get Them
+
+| Service | Where to Get | Free Tier |
+|---------|-------------|-----------|
+| **ScrapOps** | [scrapeops.io](https://scrapeops.io) | ✅ 1,000 req/month free |
+| **Apify** | [apify.com](https://apify.com) | ✅ $5 free credit |
+| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com) | ✅ Free tier available |
+| **PostgreSQL** | [postgresql.org](https://postgresql.org) | ✅ Free & open source |
+
+---
+
+## 🧠 Interest Cohort Classification
+
+The module classifies creators and their audiences into one of 10 niche interest cohorts:
+
+| Cohort | Examples |
+|--------|---------|
+| Beauty & Personal Care | Makeup, skincare, grooming |
+| Fashion & Lifestyle | Apparel, styling, daily-life vlogging |
+| Fitness & Wellness | Gym, yoga, nutrition, sport |
+| Food & Cooking | Recipes, food reviews, regional cuisine |
+| Tech & Gadgets | Reviews, how-to, unboxing |
+| Travel | Destinations, regional tourism |
+| Entertainment & Comedy | Skits, memes, reactions |
+| Education & Knowledge | Exam prep, skilling, explainers |
+| Parenting & Family | Homemaking, kids, family vlogs |
+| Devotional / Spiritual | Faith-based lifestyle content |
+
+---
+
+## 👤 Author
+
+**Gaurav Sahu**
+- GitHub: [@gauravsahu188](https://github.com/gauravsahu188)
+- LinkedIn: [Add your LinkedIn URL]
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+<div align="center">
+
+Built with ❤️ as part of an internship assignment.
+
+**Stack:** Next.js · TypeScript · PostgreSQL · Gemini AI · Apify · ScrapOps
+
+</div>
